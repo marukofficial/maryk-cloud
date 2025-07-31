@@ -6,6 +6,16 @@ app.get('/admin/ui-dashboard', protectAdmin, (req, res) => {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>MaryK Admin Dashboard</title>
+
+      <!-- 📈 Google Analytics 4 -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-MARYK12345"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){ dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-MARYK12345'); // remplace par ton vrai ID GA4
+      </script>
+
       <style>
         * { box-sizing: border-box; }
         body {
@@ -57,10 +67,10 @@ app.get('/admin/ui-dashboard', protectAdmin, (req, res) => {
       </div>
 
       <div class="card">
-        <h3>👀 Trafic Actuel</h3>
+        <h3>👀 Trafic Actuel (via GA4)</h3>
         <ul>
-          <li>Visiteurs actifs : 34</li>
-          <li>Mobile: 60% / Desktop: 40%</li>
+          <li>Visiteurs actifs : (voir Google Analytics)</li>
+          <li>Mobile / Desktop : (données live)</li>
         </ul>
       </div>
 
@@ -90,5 +100,6 @@ app.get('/admin/ui-dashboard', protectAdmin, (req, res) => {
     </html>
   `);
 });
+
 
  
