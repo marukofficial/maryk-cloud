@@ -1,13 +1,19 @@
 const express = require('express');
 const axios = require('axios');
+require('dotenv').config(); // ✅ Charge les variables depuis .env
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 🔐 Shopify API config
-const SHOP_URL = "https://marykofficial.myshopify.com";
-const API_TOKEN = "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";
-const API_VERSION = "2024-01";
+// 🔐 Shopify API config via .env
+const SHOP_URL = process.env.SHOP_URL;
+const API_TOKEN = process.env.API_TOKEN;
+const API_VERSION = process.env.API_VERSION;
+
+const headers = {
+  "X-Shopify-Access-Token": API_TOKEN,
+  "Content-Type": "application/json"
+};
 
 // ✅ Middleware fictif de protection
 function protectAdmin(req, res, next) {
@@ -50,13 +56,19 @@ app.get('/admin/ui-dashboard', protectAdmin, (req, res) => {
   `);
 });
 
+// ✅ ROUTE TEST ENV : pour vérifier les variables chargées
+app.get('/api/env-check', (req, res) => {
+  const status = {
+    SHOP_URL: !!SHOP_URL,
+    API_TOKEN: !!API_TOKEN,
+    API_VERSION: !!API_VERSION
+  };
+  res.json({ env: status });
+});
+
 // ✅ SUPPRESSION AUTOMATIQUE DES APPS NON AUTORISÉES
 async function removeUnwantedApps() {
   const keepApps = ['Trendsi', 'Eprolo', 'CCWholesale', 'Easyship'];
-  const headers = {
-    "X-Shopify-Access-Token": API_TOKEN,
-    "Content-Type": "application/json"
-  };
 
   try {
     const res = await axios.get(`${SHOP_URL}/admin/api/${API_VERSION}/applications.json`, { headers });
@@ -76,10 +88,11 @@ async function removeUnwantedApps() {
   }
 }
 
-// ✅ Lancer suppression au démarrage
+// ✅ Déclencher la suppression automatique au démarrage
 removeUnwantedApps();
 
 // ✅ Lancer le serveur Express
 app.listen(port, () => {
   console.log(`🚀 Serveur actif sur http://localhost:${port}`);
 });
+
