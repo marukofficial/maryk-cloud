@@ -50,7 +50,7 @@ app.get('/admin/ui-dashboard', protectAdmin, (req, res) => {
     </head>
     <body>
       <h1>Bienvenue sur le Dashboard Admin MaryK</h1>
-      <p>Les apps inutiles seront supprimées automatiquement à chaque démarrage.</p>
+      <p>🔒 Les apps doivent désormais être supprimées manuellement via Shopify.</p>
     </body>
     </html>
   `);
@@ -66,29 +66,12 @@ app.get('/api/env-check', (req, res) => {
   res.json({ env: status });
 });
 
-// ✅ SUPPRESSION AUTOMATIQUE DES APPS NON AUTORISÉES
-async function removeUnwantedApps() {
-  const keepApps = ['Trendsi', 'Eprolo', 'CCWholesale', 'Easyship'];
-
-  try {
-    const res = await axios.get(`${SHOP_URL}/admin/api/${API_VERSION}/applications.json`, { headers });
-    const apps = res.data.applications;
-
-    for (const app of apps) {
-      if (!keepApps.includes(app.title)) {
-        console.log(`🔴 Suppression de : ${app.title}`);
-        await axios.delete(`${SHOP_URL}/admin/api/${API_VERSION}/applications/${app.id}.json`, { headers });
-        console.log(`✅ App supprimée : ${app.title}`);
-      } else {
-        console.log(`🟢 Conservée : ${app.title}`);
-      }
-    }
-  } catch (err) {
-    console.error("❌ Erreur suppression apps :", err.response?.data || err.message);
-  }
+// 🚫 removeUnwantedApps désactivé car endpoint obsolète
+function removeUnwantedApps() {
+  console.log("⚠️ Shopify ne permet plus de lister/supprimer les apps via API. Suppression manuelle requise.");
 }
 
-// ✅ Déclencher la suppression automatique au démarrage
+// ✅ Appel de la fonction (log uniquement)
 removeUnwantedApps();
 
 // ✅ Lancer le serveur Express
