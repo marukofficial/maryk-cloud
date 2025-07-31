@@ -3,17 +3,17 @@ app.get('/admin/ui-dashboard', protectAdmin, (req, res) => {
     <!DOCTYPE html>
     <html lang="en">
     <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>MaryK Admin Dashboard</title>
 
-      <!-- 📈 Google Analytics 4 -->
-      <script async src="https://www.googletagmanager.com/gtag/js?id=G-MARYK12345"></script>
+      <!-- ✅ Google Analytics 4 (GA4) -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y70RS4K3EE"></script>
       <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){ dataLayer.push(arguments); }
         gtag('js', new Date());
-        gtag('config', 'G-MARYK12345'); // remplace par ton vrai ID GA4
+        gtag('config', 'G-Y70RS4K3EE');
       </script>
 
       <style>
@@ -100,6 +100,7 @@ app.get('/admin/ui-dashboard', protectAdmin, (req, res) => {
     </html>
   `);
 });
+
 
 
  
