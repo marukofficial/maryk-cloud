@@ -1,12 +1,12 @@
-import express from 'express';
-
+// ✅ version stable CommonJS
+const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-  res.send('✅ API MaryK fonctionne correctement !');
+  res.send('✅ MaryK API is responding 🎉');
 });
 
-app.listen(port, () => {
-  console.log(`🚀 API MaryK écoute sur le port ${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`✅ Listening on port ${port}`);
 });
