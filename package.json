@@ -1,13 +1,14 @@
 {
   "name": "maryk-cloud",
   "version": "1.0.0",
+  "description": "Automatisation Shopify & Amazon",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "dotenv": "^16.0.3",
-    "axios": "^1.6.0"
+    "axios": "^1.6.7",
+    "dotenv": "^16.4.1",
+    "express": "^4.19.2"
   }
 }
