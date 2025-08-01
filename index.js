@@ -1,22 +1,4 @@
-const express = require('express');
-const axios = require('axios');
-require('dotenv').config();
-
-const app = express();
-const port = process.env.PORT || 3000;
-
-// 🔐 Shopify API via variables d’environnement
-const SHOP_URL = process.env.SHOP_URL;
-const API_TOKEN = process.env.API_TOKEN;
-const API_VERSION = process.env.API_VERSION;
-
-const headers = {
-  "X-Shopify-Access-Token": API_TOKEN,
-  "Content-Type": "application/json"
-};
-
-// ✅ Route de test : création d’un produit Shopify
-app.post('/api/test-product', async (req, res) => {
+app.get('/api/test-product', async (req, res) => {
   try {
     const response = await axios.post(
       `${SHOP_URL}/admin/api/${API_VERSION}/products.json`,
@@ -57,11 +39,6 @@ app.post('/api/test-product', async (req, res) => {
     console.error("❌ Erreur création produit :", err.response?.data || err.message);
     res.status(500).json({ error: err.response?.data || err.message });
   }
-});
-
-// ✅ Lancer le serveur Express
-app.listen(port, () => {
-  console.log(`🚀 Serveur actif sur http://localhost:${port}`);
 });
 
 
