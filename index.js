@@ -1,44 +1,22 @@
-app.get('/api/test-product', async (req, res) => {
-  try {
-    const response = await axios.post(
-      `${SHOP_URL}/admin/api/${API_VERSION}/products.json`,
-      {
-        product: {
-          title: "Test Product MaryK",
-          body_html: "<strong>Produit de test via API</strong>",
-          vendor: "MaryK",
-          product_type: "Makeup",
-          tags: "AMAZON_READY",
-          published: true,
-          images: [
-            {
-              src: "https://cdn.shopify.com/s/files/1/0751/2116/4517/files/test-maryk.jpg"
-            }
-          ],
-          variants: [
-            {
-              option1: "Default Title",
-              price: "39.99",
-              sku: "TESTSKU123",
-              cost: "20.00"
-            }
-          ]
-        }
-      },
-      { headers }
-    );
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 8080;
 
-    res.status(200).json({
-      success: true,
-      product_id: response.data.product.id,
-      title: response.data.product.title,
-      handle: response.data.product.handle
-    });
-
-  } catch (err) {
-    console.error("❌ Erreur création produit :", err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
-  }
+// ➕ Test : route de base
+app.get('/', (req, res) => {
+  res.send('MaryK Cloud API is live.');
 });
 
+// ➕ Route test : infos boutique fictives
+app.get('/api/shop-info', (req, res) => {
+  res.json({
+    name: "MaryK Official",
+    url: "https://marykofficial.myshopify.com",
+    status: "API opérationnelle"
+  });
+});
+
+app.listen(port, () => {
+  console.log(`🚀 Serveur prêt sur http://localhost:${port}`);
+});
 
