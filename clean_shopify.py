@@ -5,7 +5,7 @@ import os
 SHOP_URL = os.getenv("SHOP_URL", "https://marykofficial.myshopify.com")
 API_TOKEN = os.getenv("API_TOKEN", "TON_TOKEN_API_ICI")
 API_VERSION = os.getenv("API_VERSION", "2024-01")
-
+ 
 headers = {
     "X-Shopify-Access-Token": API_TOKEN,
     "Content-Type": "application/json"
