@@ -4,41 +4,20 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const morgan = require('morgan');
+const cron = require('node-cron');
 
 const app = express();
 
-// Middleware : logging des requêtes HTTP
 app.use(morgan('combined'));
-
-// Middleware : CORS configuré (tu peux limiter les origines si besoin)
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Middleware : parser JSON avec limite de taille (sécurité)
+app.use(cors());
 app.use(express.json({ limit: '10kb' }));
-
-// Middleware : simple whitelist IP (optionnel)
-if (process.env.WHITELIST_IPS) {
-  const whitelist = process.env.WHITELIST_IPS.split(',');
-  app.use((req, res, next) => {
-    const ip = req.ip || req.connection.remoteAddress;
-    if (whitelist.includes(ip)) {
-      next();
-    } else {
-      res.status(403).json({ error: 'Access denied' });
-    }
-  });
-}
 
 // Route test simple
 app.get('/api/test-product', (req, res) => {
   res.status(200).json({ message: "✅ Route /api/test-product is working." });
 });
 
-// Route pour récupérer les infos Shopify
+// Route pour récupérer infos Shopify
 app.get('/api/shop-info', async (req, res) => {
   try {
     const response = await axios.get(`${process.env.SHOP_URL}/admin/api/${process.env.API_VERSION}/shop.json`, {
@@ -55,11 +34,10 @@ app.get('/api/shop-info', async (req, res) => {
   }
 });
 
-// Endpoint mise à jour description produit avec validation
+// Route mise à jour description produit
 app.post('/api/update-description', async (req, res) => {
   try {
     const { handle, new_description } = req.body;
-
     if (!handle || !new_description) {
       return res.status(400).json({ error: 'Missing required fields: handle and new_description' });
     }
@@ -70,7 +48,6 @@ app.post('/api/update-description', async (req, res) => {
       "Content-Type": "application/json"
     };
 
-    // Recherche du produit
     const response = await axios.get(search_url, { headers, timeout: 7000 });
     const products = response.data.products || [];
     if (!products.length) {
@@ -81,7 +58,6 @@ app.post('/api/update-description', async (req, res) => {
     const update_url = `${process.env.SHOP_URL}/admin/api/${process.env.API_VERSION}/products/${product_id}.json`;
     const payload = { product: { id: product_id, body_html: new_description } };
 
-    // Mise à jour description
     const update_response = await axios.put(update_url, payload, { headers, timeout: 7000 });
     if (update_response.status === 200) {
       res.json({ success: true, handle });
@@ -94,15 +70,91 @@ app.post('/api/update-description', async (req, res) => {
   }
 });
 
+// Fonction mise à jour automatique des prix selon grille
+async function updatePrices() {
+  try {
+    const calculPrixFinal = (cost) => {
+      if (cost <= 5) return cost + 7 + 10;
+      else if (cost <= 10) return cost + 8 + 9;
+      else if (cost <= 15) return cost + 8 + 8;
+      else if (cost <= 20) return cost + 9 + 7;
+      else if (cost <= 25) return cost + 9 + 6;
+      else if (cost <= 30) return cost + 10 + 5;
+      else if (cost <= 40) return cost + 10 + 4;
+      else if (cost <= 50) return cost + 12 + 4;
+      else if (cost <= 60) return cost + 13 + 3;
+      else if (cost <= 80) return cost + 14 + 3;
+      else return cost + 16 + 2;
+    };
+
+    const headers = {
+      "X-Shopify-Access-Token": process.env.API_TOKEN,
+      "Content-Type": "application/json"
+    };
+
+    const url = `${process.env.SHOP_URL}/admin/api/${process.env.API_VERSION}/products.json`;
+
+    const response = await axios.get(url, { headers });
+    const products = response.data.products || [];
+
+    for (const product of products) {
+      for (const variant of product.variants) {
+        let cost = parseFloat(variant.cost) || 0;
+        let newPrice = calculPrixFinal(cost);
+        newPrice = Math.round(newPrice * 100) / 100;
+
+        const updateUrl = `${process.env.SHOP_URL}/admin/api/${process.env.API_VERSION}/variants/${variant.id}.json`;
+        const payload = {
+          variant: {
+            id: variant.id,
+            price: newPrice.toString()
+          }
+        };
+
+        const updateResponse = await axios.put(updateUrl, payload, { headers });
+        if (updateResponse.status !== 200) {
+          console.error(`Erreur mise à jour variante ${variant.id}:`, updateResponse.data);
+        }
+      }
+    }
+
+    console.log("Mise à jour des prix terminée.");
+
+  } catch (error) {
+    console.error('Erreur dans updatePrices:', error.message);
+  }
+}
+
+// Endpoint pour lancer la mise à jour prix manuellement via API
+app.post('/api/update-prices', async (req, res) => {
+  try {
+    await updatePrices();
+    res.json({ success: true, message: "Prix mis à jour selon la grille." });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+});
+
+// Planification cron à 2h du matin UTC
+cron.schedule('0 2 * * *', () => {
+  console.log('Début de la tâche cron : mise à jour automatique des prix');
+  updatePrices()
+    .then(() => console.log('Mise à jour des prix terminée'))
+    .catch(err => console.error('Erreur lors de la mise à jour des prix', err));
+});
+
+// Optionnel : lance une mise à jour au démarrage
+updatePrices();
+
 // Health check racine
 app.get('/', (req, res) => res.send('MaryK Cloud API OK'));
 
-// Catch-all 404
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-// Gestion des erreurs globales (middleware)
+// Gestion erreurs globales
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err);
   res.status(500).json({ error: 'Internal server error' });
@@ -111,10 +163,4 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`MaryK Cloud API lancé sur le port ${PORT}`);
-});
-cron.schedule('0 2 * * *', () => {
-  console.log('Début de la tâche cron : mise à jour automatique des prix');
-  updatePrices()
-    .then(() => console.log('Mise à jour des prix terminée'))
-    .catch(err => console.error('Erreur lors de la mise à jour des prix', err));
 });
