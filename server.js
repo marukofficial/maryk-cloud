@@ -1,7 +1,4 @@
 // ✅ server.js – MaryK Cloud API Backend (Express)
-// Load environment variables from .env file if present
-require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -27,3 +24,4 @@ app.get('/api/shop-info', async (req, res) => {
     });
 
     res.status(200).json(response.data);
+
