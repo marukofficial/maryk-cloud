@@ -1,55 +1,46 @@
-// server.js
-
 require('dotenv').config();
 const express = require('express');
+const axios = require('axios');
 const cors = require('cors');
-const bodyParser = require('body-parser');
-
-// Helpers à importer (crée-les après !)
-const { filterCompliantProducts } = require('./helpers/filterProducts');
-const { generateBacklinks } = require('./helpers/backlinks');
-const { generateSuperKeywords } = require('./helpers/keywords');
-
 const app = express();
+
+app.use(express.json());
 app.use(cors());
-app.use(bodyParser.json());
 
-// --- ROUTE TEST ---
-app.get('/', (req, res) => {
-  res.send('MaryK Cloud API is running!');
-});
+const SHOP_URL = process.env.SHOP_URL;
+const API_TOKEN = process.env.API_TOKEN;
+const API_VERSION = process.env.API_VERSION || "2024-01";
 
-// --- SHOPIFY -> AMAZON EXPORT (exemple) ---
-app.post('/api/export-amazon', async (req, res) => {
-  // À remplacer par ta vraie fonction de fetch produits Shopify
-  let products = req.body.products || [];
-  let { accepted, rejected } = filterCompliantProducts(products);
-
-  // Enrichir chaque produit accepté avec backlinks + keywords
-  for (let prod of accepted) {
-    prod.keywords = await generateSuperKeywords(prod);
-    prod.backlinks = generateBacklinks(prod, accepted);
+// Endpoint exemple : MAJ description produit
+app.post('/api/update-description', async (req, res) => {
+  try {
+    const { handle, new_description } = req.body;
+    const search_url = `${SHOP_URL}/admin/api/${API_VERSION}/products.json?handle=${handle}`;
+    const headers = {
+      "X-Shopify-Access-Token": API_TOKEN,
+      "Content-Type": "application/json"
+    };
+    const response = await axios.get(search_url, { headers });
+    const products = response.data.products || [];
+    if (!products.length) return res.status(404).json({ error: `Produit non trouvé: ${handle}` });
+    const product_id = products[0].id;
+    const update_url = `${SHOP_URL}/admin/api/${API_VERSION}/products/${product_id}.json`;
+    const payload = { product: { id: product_id, body_html: new_description } };
+    const update_response = await axios.put(update_url, payload, { headers });
+    if (update_response.status === 200) {
+      return res.json({ success: true, handle });
+    } else {
+      return res.status(500).json({ error: "Erreur MAJ", details: update_response.data });
+    }
+  } catch (e) {
+    return res.status(500).json({ error: "Erreur serveur", details: e.message });
   }
-
-  // (Appel API Amazon ici si branché)
-  res.json({
-    exported: accepted.length,
-    skipped: rejected.length,
-    skippedDetails: rejected.map(p => ({
-      id: p.id,
-      title: p.title,
-      reason: p.rejectionReason
-    })),
-    enrichedProducts: accepted
-  });
 });
 
-// --- AUTRES ROUTES À AJOUTER (Google, TikTok, FB, eBay, PDF, Dashboard...) ---
-// Copie/colle la structure ci-dessus pour chaque export/import désiré
-// Exemples : /api/export-google, /api/export-tiktok, etc.
+// Health check
+app.get('/', (req, res) => res.send('MaryK Cloud API OK'));
 
-// --- DÉMARRAGE SERVEUR ---
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`MaryK Cloud API is running on port ${PORT}`);
+  console.log(`MaryK Cloud API lancé sur le port ${PORT}`);
 });
