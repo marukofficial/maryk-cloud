@@ -1,7 +1,8 @@
-require('dotenv').config();
 const express = require('express');
-const axios = require('axios');
 const cors = require('cors');
+const axios = require('axios');
+require('dotenv').config();
+
 const app = express();
 
 app.use(express.json());
@@ -11,7 +12,6 @@ const SHOP_URL = process.env.SHOP_URL;
 const API_TOKEN = process.env.API_TOKEN;
 const API_VERSION = process.env.API_VERSION || "2024-01";
 
-// Endpoint exemple : MAJ description produit
 app.post('/api/update-description', async (req, res) => {
   try {
     const { handle, new_description } = req.body;
@@ -37,10 +37,11 @@ app.post('/api/update-description', async (req, res) => {
   }
 });
 
-// Health check
 app.get('/', (req, res) => res.send('MaryK Cloud API OK'));
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
   console.log(`MaryK Cloud API lancé sur le port ${PORT}`);
 });
+
