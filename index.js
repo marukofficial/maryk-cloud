@@ -112,3 +112,9 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`MaryK Cloud API lancé sur le port ${PORT}`);
 });
+cron.schedule('0 2 * * *', () => {
+  console.log('Début de la tâche cron : mise à jour automatique des prix');
+  updatePrices()
+    .then(() => console.log('Mise à jour des prix terminée'))
+    .catch(err => console.error('Erreur lors de la mise à jour des prix', err));
+});
