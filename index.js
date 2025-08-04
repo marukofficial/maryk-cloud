@@ -1,5 +1,5 @@
-// ✅ server.js – MaryK Cloud API Backend (Express)
-// Load environment variables from .env file if present
+// ✅ MaryK Cloud API Backend (Express)
+// Chargement des variables d'environnement
 require('dotenv').config();
 
 const express = require('express');
@@ -9,21 +9,37 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ➕ Exemple de route pour test
-app.get('/api/test-product', (req, res) => {
-  res.status(200).json({ message: "✅ Route /api/test-product is working." });
+// ✅ Test de vie
+app.get('/', (req, res) => {
+  res.send('MaryK Cloud API is running 🚀');
 });
 
-// ➕ Exemple de route pour Shopify info
-app.get('/api/shop-info', async (req, res) => {
-  try {
-    const axios = require('axios');
+// ✅ Shopify Endpoint
+app.get('/api/shopify-test', (req, res) => {
+  res.json({ ok: true, message: "Shopify route active!" });
+});
 
-    const response = await axios.get(`${process.env.SHOP_URL}/admin/api/${process.env.API_VERSION}/shop.json`, {
-      headers: {
-        'X-Shopify-Access-Token': process.env.API_TOKEN,
-        'Content-Type': 'application/json'
-      }
-    });
+// ✅ Amazon Endpoint
+app.get('/api/amazon-test', (req, res) => {
+  res.json({ ok: true, message: "Amazon route active!" });
+});
 
-    res.status(200).json(response.data);
+// ✅ Facebook/Instagram Endpoint
+app.get('/api/social-test', (req, res) => {
+  res.json({ ok: true, message: "Social route active!" });
+});
+
+// ✅ GA4 Analytics Endpoint
+app.get('/api/ga4-test', (req, res) => {
+  res.json({ ok: true, message: "GA4 route active!" });
+});
+
+// ➕ Ajoute ici toutes tes routes "feature" centralisées
+// (import de routes, authent, dashboard, etc.)
+
+// ✅ Lancement du serveur
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`MaryK Cloud API running on port ${PORT}`);
+});
+
